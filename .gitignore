@@ -18,4 +18,10 @@ Thumbs.db
 *.log
 logs/
 
+# Ferramentas / artefatos locais (não vão para o GitHub)
+.agents/
+skills-lock.json
+landing/
+
+# Documentação de estudo local (não publicada)
 docs
