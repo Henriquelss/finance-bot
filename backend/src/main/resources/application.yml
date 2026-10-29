@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: financebot-backend
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:financebot}
+    username: ${DB_USER:financebot}
+    password: ${DB_PASSWORD:financebot-local}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: ${APP_TIMEZONE:America/Sao_Paulo}
+
+  jackson:
+    time-zone: ${APP_TIMEZONE:America/Sao_Paulo}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  # O polling do Telegram e a transcrição de áudio rodam agendados; com a pool
+  # padrão (1 thread), uma chamada lenta à OpenAI atrasa a leitura das mensagens.
+  task:
+    scheduling:
+      pool:
+        size: 2
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  timezone: ${APP_TIMEZONE:America/Sao_Paulo}
+
+telegram:
+  token: ${TELEGRAM_BOT_TOKEN:}
+  polling-interval-ms: 2000
+  polling-timeout-seconds: 10
+  # Log de atividade do polling: uma linha a cada 15 min (e sempre que chegar
+  # mensagem nova), para conseguir provar que o bot está vivo sem poluir o log.
+  heartbeat-log-seconds: 900
+  failed-polls-warn-threshold: 5
+
+# Provedor de IA compatível com a API da OpenAI (a própria OpenAI, o Groq —
+# plano gratuito — ou um Whisper auto-hospedado). Mudam base URL, chave e modelos.
+openai:
+  base-url: ${AI_BASE_URL:https://api.openai.com/v1}
+  api-key: ${AI_API_KEY:}
+  transcription-model: ${AI_TRANSCRIPTION_MODEL:whisper-1}
+  extraction-model: ${AI_EXTRACTION_MODEL:gpt-4o-mini}
+  # pt = idioma fixo na transcrição; vazio = detecção automática
+  transcription-language: ${AI_TRANSCRIPTION_LANGUAGE:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+# Explícito para não depender do default do Spring: suba para DEBUG localmente
+# com LOGGING_LEVEL_COM_FINANCEBOT=DEBUG para ver o detalhe do polling.
+logging:
+  level:
+    root: INFO
+    com.financebot: INFO
